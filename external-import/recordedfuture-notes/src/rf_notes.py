@@ -12,11 +12,10 @@
 import os
 import time
 import traceback
-from datetime import datetime
 
 import yaml
-from pycti import OpenCTIConnectorHelper, get_config_variable
-from rflib import APP_VERSION, RFClient, StixNote
+from pycti import OpenCTIConnectorHelper, get_config_variable, Identity
+from rflib import APP_VERSION, RFClient, StixNote, TaxiiUtils
 
 
 class RFNotes:
@@ -84,6 +83,11 @@ class RFNotes:
             self.helper,
             header=f"OpenCTI-notes/{APP_VERSION}",
         )
+        self.author = stix2.Identity(
+            id=Identity.generate_id("Recorded Future", "organization"),
+            name="Recorded Future",
+            identity_class="organization",
+        )
         # In a crisis, smash glass and uncomment this line of code
         # self.helper.config['uri'] = self.helper.config['uri'].replace('rabbitmq', '172.19.0.6')
 
@@ -113,6 +117,7 @@ class RFNotes:
                 published = self.rf_initial_lookback
 
             try:
+                TaxiiUtils.run()
                 self.convert_and_send(published, tas)
             except Exception as e:
                 self.helper.log_error(str(e))
