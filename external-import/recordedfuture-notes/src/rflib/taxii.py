@@ -6,7 +6,7 @@ from libtaxii.constants import *
 from datetime import datetime, timedelta
 from dateutil.tz import tzutc
 import xmltodict
-from rf_notes_to_stix2 import IPAddress
+from .rf_notes_to_stix2 import IPAddress
 import stix2
 
 class TaxiiUtils:

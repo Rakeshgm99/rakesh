@@ -12,6 +12,8 @@
 import os
 import time
 import traceback
+from datetime import datetime
+import stix2
 
 import yaml
 from pycti import OpenCTIConnectorHelper, get_config_variable, Identity
@@ -117,7 +119,8 @@ class RFNotes:
                 published = self.rf_initial_lookback
 
             try:
-                TaxiiUtils.run()
+                taxiiUtils = TaxiiUtils()
+                taxiiUtils.run()
                 self.convert_and_send(published, tas)
             except Exception as e:
                 self.helper.log_error(str(e))
