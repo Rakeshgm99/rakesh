@@ -9,6 +9,7 @@ import xmltodict
 from .rf_notes_to_stix2 import IPAddress
 import stix2
 
+
 class TaxiiUtils:
     def run(self):
         client = self.config_server()
@@ -23,9 +24,11 @@ class TaxiiUtils:
         all_indicators = []
         for block in taxii_message.content_blocks:
             my_dict = xmltodict.parse(block.content)
-            all_indicators.extend(my_dict['stix:STIX_Package']['stix:Indicators']['stix:Indicator'])
+            all_indicators.extend(
+                my_dict["stix:STIX_Package"]["stix:Indicators"]["stix:Indicator"]
+            )
             all_files.append(my_dict)
-        print('1')
+        print("1")
         bundle = []
         for indicator in all_indicators:
             RF_indicator = self.extract_indicator_from_taxii_indicator(indicator)
@@ -45,29 +48,47 @@ class TaxiiUtils:
         )
         begin = datetime.now(tzutc()) + timedelta(days=-1)
         end = datetime.now(tzutc())
-        poll_request = tm11.PollRequest(tm11.generate_message_id(), collection_name='ip_full',
-                                        poll_parameters=poll_params1, inclusive_end_timestamp_label=end,
-                                        exclusive_begin_timestamp_label=begin)
+        poll_request = tm11.PollRequest(
+            tm11.generate_message_id(),
+            collection_name="ip_full",
+            poll_parameters=poll_params1,
+            inclusive_end_timestamp_label=end,
+            exclusive_begin_timestamp_label=begin,
+        )
         poll_request_xml = poll_request.to_xml()
         # http_resp = client.call_taxii_service2('api.recordedfuture.com/taxii', '/pollservice/', VID_TAXII_XML_11, discovery_xml)
-        http_resp = client.call_taxii_service2('api.recordedfuture.com', '/taxii/pollservice/', VID_TAXII_XML_11,
-                                               poll_request_xml)
-        taxii_message = t.get_message_from_http_response(http_resp, poll_request.message_id)
+        http_resp = client.call_taxii_service2(
+            "api.recordedfuture.com",
+            "/taxii/pollservice/",
+            VID_TAXII_XML_11,
+            poll_request_xml,
+        )
+        taxii_message = t.get_message_from_http_response(
+            http_resp, poll_request.message_id
+        )
         return taxii_message
 
     def config_server(self):
         client = tc.HttpClient()
         client.set_auth_type(tc.HttpClient.AUTH_BASIC)
         client.set_use_https(True)
-        client.set_auth_credentials({'username': 'MyUsername', 'password': '17aca155572d42cab8fd7b525d093d6c'})
+        client.set_auth_credentials(
+            {"username": "MyUsername", "password": "17aca155572d42cab8fd7b525d093d6c"}
+        )
         return client
 
     def extract_indicator_from_taxii_indicator(self, taxii_indicator) -> IPAddress:
-        type = taxii_indicator['indicator:Observable']['cybox:Object']['cybox:Properties']['@category']
-        value = taxii_indicator['indicator:Observable']['cybox:Object']['cybox:Properties']['AddressObj:Address_Value']['#text']
+        type = taxii_indicator["indicator:Observable"]["cybox:Object"][
+            "cybox:Properties"
+        ]["@category"]
+        value = taxii_indicator["indicator:Observable"]["cybox:Object"][
+            "cybox:Properties"
+        ]["AddressObj:Address_Value"]["#text"]
         # if no value in the first field, we get it from the Title
         # Title is like 'IP Address 5.42.65.101'
         if value is None:
-            space_index = taxii_indicator['indicator:Title'].find(" ")
-            value = taxii_indicator['indicator:Title'][space_index +1:] # take the text after the space, which is the indicator
+            space_index = taxii_indicator["indicator:Title"].find(" ")
+            value = taxii_indicator["indicator:Title"][
+                space_index + 1 :
+            ]  # take the text after the space, which is the indicator
         return IPAddress(value, type, self.author)
