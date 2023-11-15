@@ -8,9 +8,18 @@ from dateutil.tz import tzutc
 import xmltodict
 from .rf_notes_to_stix2 import IPAddress
 import stix2
+from pycti import Identity
+
 
 
 class TaxiiUtils:
+    def __init__(self):
+        self.author = stix2.Identity(
+            id=Identity.generate_id("Recorded Future", "organization"),
+            name="Recorded Future",
+            identity_class="organization",
+        )
+
     def run(self):
         client = self.config_server()
 
@@ -20,14 +29,12 @@ class TaxiiUtils:
         stix2.Bundle(objects=bundle, allow_custom=True)
 
     def extract_data(self, taxii_message):
-        all_files = []
         all_indicators = []
         for block in taxii_message.content_blocks:
             my_dict = xmltodict.parse(block.content)
             all_indicators.extend(
                 my_dict["stix:STIX_Package"]["stix:Indicators"]["stix:Indicator"]
             )
-            all_files.append(my_dict)
         print("1")
         bundle = []
         for indicator in all_indicators:
@@ -50,7 +57,7 @@ class TaxiiUtils:
         end = datetime.now(tzutc())
         poll_request = tm11.PollRequest(
             tm11.generate_message_id(),
-            collection_name="ip_full",
+            collection_name="ip_nameserver_for_cc_server",
             poll_parameters=poll_params1,
             inclusive_end_timestamp_label=end,
             exclusive_begin_timestamp_label=begin,
