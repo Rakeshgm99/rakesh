@@ -47,7 +47,7 @@ class TaxiiUtils:
         # discovery_xml = discovery_request.to_xml()
         # TODO Check possibility to paginate
         # query = tm11.Query()
-        poll_params1 = tm11.PollParameters(
+        poll_params = tm11.PollParameters(
             allow_asynch=True,
             response_type=RT_COUNT_ONLY,
             content_bindings=[tm11.ContentBinding(binding_id=CB_STIX_XML_11)],
@@ -57,8 +57,8 @@ class TaxiiUtils:
         end = datetime.now(tzutc())
         poll_request = tm11.PollRequest(
             tm11.generate_message_id(),
-            collection_name="ip_nameserver_for_cc_server",
-            poll_parameters=poll_params1,
+            collection_name="domain_full",
+            poll_parameters=poll_params,
             inclusive_end_timestamp_label=end,
             exclusive_begin_timestamp_label=begin,
         )
@@ -94,6 +94,7 @@ class TaxiiUtils:
         # if no value in the first field, we get it from the Title
         # Title is like 'IP Address 5.42.65.101'
         if value is None:
+            # TODO change this algo as it won't work for ip addresses
             space_index = taxii_indicator["indicator:Title"].find(" ")
             value = taxii_indicator["indicator:Title"][
                 space_index + 1 :
